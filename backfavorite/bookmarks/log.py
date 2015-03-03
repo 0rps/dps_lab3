@@ -3,7 +3,10 @@ __author__ = 'orps'
 import datetime
 
 def log(message, level):
-	print "{0} {1}, msg: {2}".format(level, datetime.datetime.now(), message)
+	file = open('../backend_favorite.log', 'a')
+	line = "{0}: {1} msg: {2}\n".format(level, datetime.datetime.now(), message)
+	file.write(line)
+	file.close()
 
 def loginfo(message):
 	log(message, 'INFO')

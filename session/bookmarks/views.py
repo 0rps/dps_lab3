@@ -8,9 +8,16 @@ import json
 from bookmarks import models
 from log import logerror, loginfo
 
+def printRequest(func):
+	def wrapper(r, *args, **kwargs):
+		loginfo(r.method + " " + r.get_full_path())
+		return func(r, *args, **kwargs)
+	return wrapper
+
 @csrf_exempt
+@printRequest
 def handleRegisterRequest(request):
-	loginfo(request.get_full_path())
+	#loginfo(request.get_full_path())
 
 	put = request.REQUEST
 
@@ -29,9 +36,9 @@ def handleRegisterRequest(request):
 	loginfo("user registered")
 	return HttpResponse()
 
-
+@printRequest
 def handleCheckCookieRequest(request):
-	loginfo(request.get_full_path())
+	#loginfo(request.get_full_path())
 	get = request.GET
 	token = get.get('token')
 	sessionId = get.get('id')
@@ -45,10 +52,10 @@ def handleCheckCookieRequest(request):
 		loginfo('invalid cookie')
 		return HttpResponseBadRequest()
 
-
 @csrf_exempt
+@printRequest
 def handleLoginRequest(request):
-	loginfo(request.get_full_path())
+	#loginfo(request.get_full_path())
 	post = request.POST
 
 	email = post.get('email')
@@ -77,8 +84,9 @@ def handleLoginRequest(request):
 		return HttpResponseBadRequest()
 
 @csrf_exempt
+@printRequest
 def handleLogoutRequest(request):
-	loginfo(request.get_full_path())
+	#loginfo(request.get_full_path())
 	delete = request.REQUEST
 
 	token = delete.get('token')
@@ -95,9 +103,9 @@ def handleLogoutRequest(request):
 
 	return HttpResponse()
 
-
+@printRequest
 def handleMeRequest(request):
-	loginfo(request.get_full_path())
+	#loginfo(request.get_full_path())
 	get = request.GET
 
 	userId = get.get('userId')
@@ -106,3 +114,9 @@ def handleMeRequest(request):
 	loginfo('user email' + str(user.email))
 
 	return HttpResponse(user.json())
+
+@printRequest
+def handleUserCountRequest(request):
+	count = models.Cookie.objects.all().count()
+
+	return HttpResponse(json.dumps({'count': str(count)}))

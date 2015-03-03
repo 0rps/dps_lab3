@@ -9,4 +9,5 @@ urlpatterns = patterns('',
     url(r'^logout/?$', views.handleLogoutRequest),
     url(r'^me/?$', views.handleMeRequest),
     url(r'^check/?$', views.handleCheckCookieRequest),
+    url(r'^usercount/?$', views.handleUserCountRequest),
 )

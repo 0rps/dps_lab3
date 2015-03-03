@@ -7,9 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 from bookmarks import models
-from bookmarks.log import  logerror, loginfo
+from bookmarks.log import logerror, loginfo
 
+def printRequest(func):
+	def wrapper(r, *args, **kwargs):
+		loginfo(r.method + " " + r.get_full_path())
+		return func(r, *args, **kwargs)
+	return wrapper
 
+@printRequest
 def handleBookmarksRequest(request):
 	if request.method != 'GET':
 		logerror("this isn't GET request")
@@ -55,7 +61,9 @@ def handleBookmarksRequest(request):
 
 	return HttpResponse(json.dumps(result))
 
+
 @csrf_exempt
+@printRequest
 def handleAddRequest(request):
 	if request.method != 'POST':
 		logerror("this isn't POST request")
@@ -83,7 +91,9 @@ def handleAddRequest(request):
 	loginfo("request is executed")
 	return HttpResponse()
 
+
 @csrf_exempt
+@printRequest
 def handleChangeRequest(request):
 	if request.method != 'PUT':
 		logerror("this isn't PUT request")
@@ -110,6 +120,7 @@ def handleChangeRequest(request):
 	return HttpResponse()
 
 @csrf_exempt
+@printRequest
 def handleDeleteRequest(request):
 	if request.method != 'DELETE':
 		logerror("this isn't DELETE request")

@@ -7,7 +7,14 @@ import json
 from bookmarks import models
 from bookmarks.log import loginfo, logerror
 
+def printRequest(func):
+	def wrapper(r, *args, **kwargs):
+		loginfo(r.method + " " + r.get_full_path())
+		return func(r, *args, **kwargs)
+	return wrapper
+
 @csrf_exempt
+@printRequest
 def handleAddRequest(request):
 	if request.method != 'PUT':
 		logerror("this is not PUT request")
@@ -36,6 +43,7 @@ def handleAddRequest(request):
 	return HttpResponse(json.dumps({'id': id}))
 
 @csrf_exempt
+@printRequest
 def handleDeleteRequest(request):
 	if request.method != 'DELETE':
 		logerror("this is not DELETE request")
@@ -59,6 +67,7 @@ def handleDeleteRequest(request):
 	loginfo("bookmark is deleted")
 	return HttpResponse()
 
+@printRequest
 def handleBookmarksRequest(request):
 	if request.method != 'GET':
 		logerror("this is not GET request")

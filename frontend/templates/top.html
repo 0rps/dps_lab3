@@ -1,19 +1,8 @@
 {% extends "base.html" %}
-{% block title %} Top users {% endblock %}
+{% block title %} USERS {% endblock %}
 {% block content %}
 
-<table style="border: 1px">
-    <tr>
-        <th>User</th>
-        <th>Bookmarks count<th>
-    </tr>
-    {% for user in users %}
-        <tr>
-            <td> user.name </td>
-            <td> user.count </td>
-        </tr>
-    {% endfor %}
-
-</table>
+<br>
+User count: {{ count }}
 
 {% endblock %}
