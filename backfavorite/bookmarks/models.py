@@ -1,3 +1,20 @@
 from django.db import models
 
-# Create your models here.
+class Favorite(models.Model):
+	userId = models.IntegerField()
+	bookmarkId = models.IntegerField()
+	description = models.TextField()
+
+	def toJson(self):
+		result = {}
+		result['bookmarkId'] = self.bookmarkId
+		result['id'] = self.id
+		result['description'] = self.description
+		return result
+
+def equalBookmarkCount(bookmarkId):
+	return Favorite.objects.filter(bookmarkId=int(bookmarkId)).count()
+
+def getFavorite(id):
+	request = Favorite.objects.filter(id=int(id))
+	return request[0] if request.count() > 0 else None

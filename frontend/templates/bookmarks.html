@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %} Bookmarks {% endblock %}
+{% block content %}
+
+<form action="/addbookmark" method="post">
+    URL:<br>
+    <input type="url" name="url"> <br>
+    Description: <br>
+    <input type="text" name="description"><br>
+    <input type="submit" value="Add bookmark"/><br>
+</form>
+
+<br>
+<table>
+    <tr>
+        <th style="border-right=1px">URL</th>
+        <th>Description</th>
+    </tr>
+    {% for bookmark in bookmarks %}
+    <tr>
+        <td style="border-right=1px">{{bookmark.url}}</td>
+        <form action="/addbookmark" method="put">
+            <input type="hidden" value="{{bookmark.id}}">
+            <input type="text" name="description" value="{{bookmark.description}}">
+            <input type="submit" value="Update"/>
+        </form>
+        <form action="/deletebookmark" method="delete">
+            <input type="hidden" value="{{bookmark.id}}">
+            <input type="submit" value="Delete"/>
+        </form>>
+    </tr>
+    {% endfor %}
+</table>
+<br>
+<table>
+    <tr>
+        {%if lastPage %}
+        <td><a href="{{prevPage.url}}">{{prevPage.num}}</a></td>
+        {% endif %}
+        <td>{{pageNumber}}</td>
+        {%if nextPage %}
+        <td><a href="{{nextPage.url}}">{{nextPage.num}}</a></td>
+        {% endif %}
+    </tr>
+</table>
+
+{% endblock %}
