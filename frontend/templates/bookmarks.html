@@ -5,6 +5,7 @@
 <form action="/addbookmark" method="post">
     URL:<br>
     <input type="url" name="url"> <br>
+    <input type="hidden" name="pageurl" value="{{curPageUrl}}">
     Description: <br>
     <input type="text" name="description"><br>
     <input type="submit" value="Add bookmark"/><br>
@@ -19,27 +20,34 @@
     {% for bookmark in bookmarks %}
     <tr>
         <td style="border-right=1px">{{bookmark.url}}</td>
-        <form action="/addbookmark" method="put">
-            <input type="hidden" value="{{bookmark.id}}">
+        <td>
+        <form action="/changebookmark" method="post">
+            <input type="hidden" name="pageurl" value="{{curPageUrl}}">
+            <input type="hidden" name="id" value="{{bookmark.id}}">
             <input type="text" name="description" value="{{bookmark.description}}">
             <input type="submit" value="Update"/>
         </form>
-        <form action="/deletebookmark" method="delete">
-            <input type="hidden" value="{{bookmark.id}}">
+        </td>
+        <td>
+        <form action="/deletebookmark" method="post">
+            <input type="hidden" name="pageurl" value="{{curPageUrl}}">
+            <input type="hidden" name="id" value="{{bookmark.id}}">
             <input type="submit" value="Delete"/>
-        </form>>
+        </form>
+        </td>
     </tr>
     {% endfor %}
 </table>
 <br>
-<table>
+<br>
+<table style="width:300; margin:auto">
     <tr>
-        {%if lastPage %}
-        <td><a href="{{prevPage.url}}">{{prevPage.num}}</a></td>
+        {%if prevPage %}
+        <td><a href="{{prevPage.url}}">Previous page</a></td>
         {% endif %}
-        <td>{{pageNumber}}</td>
+        <td>Page {{pageNumber}}</td>
         {%if nextPage %}
-        <td><a href="{{nextPage.url}}">{{nextPage.num}}</a></td>
+        <td><a href="{{nextPage.url}}">Next page</a></td>
         {% endif %}
     </tr>
 </table>

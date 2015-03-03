@@ -7,11 +7,12 @@ from django.views.decorators.csrf import csrf_exempt
 import requests
 
 from bookmarks import forms
+from bookmarks.log import loginfo, logerror
 # Create your views here.
 
 sessionServer = "http://127.0.0.1:8002"
-backendFavorites = "http://127.0.0.1:6000"
-backendBookmarks = "http://127.0.0.1:5000"
+backendFavorites = "http://127.0.0.1:8003"
+backendBookmarks = "http://127.0.0.1:8004"
 frontendServer = "http://127.0.0.1:8000"
 
 
@@ -57,16 +58,15 @@ def addBookmark(request, session=None):
 	if request.method != 'POST':
 		return HttpResponseForbidden()
 
-	frontUrl = "{0}/getbookmarks?page={1}".format(frontendServer, 1)
-
 	post = request.POST
 	url = post.get('url')
 	description = post.get('description')
+	curUrl = post.get('pageurl')
 
 	if url is None or description is None:
 		return HttpResponseBadRequest()
 
-	query = "{0}/addbookmark?url={1}".format(backendBookmarks, url)
+	query = "{0}/add?url={1}".format(backendBookmarks, url)
 	response = requests.put(query)
 
 	if response.status_code != 200:
@@ -75,45 +75,56 @@ def addBookmark(request, session=None):
 	id = response.json()['id']
 
 	query = "{0}/add".format(backendFavorites)
-	response = requests.post(query,data={'id': id,
+	response = requests.post(query, data={'bookmarkId': str(id),
 										 'userId': session['userId'],
 										 'description': description})
 
 	if response.status_code != 200:
 		return HttpResponseServerError()
 
+	if curUrl:
+		return HttpResponseRedirect(curUrl)
+
+	frontUrl = "{0}/bookmarks?page={1}".format(frontendServer, 1)
 	return HttpResponseRedirect(frontUrl)
 
+@csrf_exempt
 @sessionWrapper
 @authorizationRequired
 def changeBookmark(request, session=None):
-	if request.method != 'PUT':
+	if request.method != 'POST':
 		return HttpResponseForbidden()
 
-	param = request.REQUEST
+	param = request.POST
 
 	description = param.get('description')
 	id = param.get('id')
+	curUrl = param.get('pageurl')
 
-	if description is None and id is None:
+	if description is None or id is None:
 		return HttpResponseBadRequest()
 
-	query = "{0}/change?id={1}&description={2}".format(backendFavorites,id, description)
+	query = "{0}/change?id={1}&description={2}".format(backendFavorites, id, description)
 	response = requests.put(query)
-	if response != 200:
+	if response.status_code != 200:
 		return HttpResponseServerError()
 
-	url = "{0}/getbookmarks?page={1}".format(frontendServer, 1)
+	if curUrl:
+		return HttpResponseRedirect(curUrl)
+
+	url = "{0}/bookmarks?page={1}".format(frontendServer, 1)
 	return HttpResponseRedirect(url)
 
+@csrf_exempt
 @sessionWrapper
 @authorizationRequired
 def deleteBookmark(request, session=None):
-	if request.method != 'DELETE':
+	if request.method != 'POST':
 		return HttpResponseForbidden()
 
-	param = request.REQUEST
+	param = request.POST
 
+	curUrl = param.get('pageurl')
 	id = param.get('id')
 
 	if id is None:
@@ -121,7 +132,7 @@ def deleteBookmark(request, session=None):
 
 	query = "{0}/remove?id={1}".format(backendFavorites, id)
 	response = requests.delete(query)
-	if response != 200:
+	if response.status_code != 200:
 		return HttpResponseServerError()
 
 	response = response.json()
@@ -129,10 +140,14 @@ def deleteBookmark(request, session=None):
 	if count == 0:
 		query = "{0}/remove?id={1}".format(backendBookmarks, response['bookmarkId'])
 		response = requests.delete(query)
-		if response != 200:
+		if response.status_code != 200:
 			return HttpResponseServerError()
 
-	url = "{0}/getbookmarks?page={1}".format(frontendServer, 1)
+	url = "{0}/bookmarks?page={1}".format(frontendServer, 1)
+
+	if curUrl:
+		return HttpResponseRedirect(curUrl)
+
 	return HttpResponseRedirect(url)
 
 
@@ -155,16 +170,16 @@ def getBookmarks(request, session=None):
 
 	response = response.json()
 
-	page = response['page']
-	total = response['total']
+	page = int(response['page'])
+	total = int(response['total'])
 
 	if page > 1:
-		prevPage = {'num': page-1, 'url': "{0}?page={1}".format(frontendServer, page-1)}
+		prevPage = {'num': page-1, 'url': "{0}/bookmarks?page={1}".format(frontendServer, page-1)}
 	else:
 		prevPage = None
 
-	if page != total:
-		nextPage = {'num': page+1, 'url': "{0}?page={1}".format(frontendServer, page+1)}
+	if page < total:
+		nextPage = {'num': page+1, 'url': "{0}/bookmarks?page={1}".format(frontendServer, page+1)}
 	else:
 		nextPage = None
 
@@ -176,21 +191,22 @@ def getBookmarks(request, session=None):
 	if param != "":
 		param = param[1:]
 
-	query = "{0}/?bookmarks={1}".format(backendBookmarks, param)
+		query = "{0}/bookmarks?bookmarks={1}".format(backendBookmarks, param)
+		response = requests.get(query)
 
-	response = requests.get(query)
+		if response.status_code != 200:
+			return HttpResponseServerError()
 
-	if response.status_code != 200:
-		return HttpResponseServerError()
+		response = response.json()
+		urls = response['bookmarks']
 
-	response = response.json()
-	urls = response['bookmarks']
+		for bookmark in bookmarks:
+			bookmark['url'] = urls[bookmark['bookmarkId']]
 
-	for bookmark in bookmarks:
-		bookmark['url'] = urls[bookmark['bookmarkId']]
-
+	curUrl = "{0}/bookmarks?page={1}".format(frontendServer, pageNumber)
 
 	return render(request, "bookmarks.html", {'logged': session,
+											  'curPageUrl': curUrl,
 											  'bookmarks':bookmarks,
 											  'pageNumber':pageNumber,
 											  'prevPage':prevPage,

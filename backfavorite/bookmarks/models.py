@@ -7,8 +7,8 @@ class Favorite(models.Model):
 
 	def toJson(self):
 		result = {}
-		result['bookmarkId'] = self.bookmarkId
-		result['id'] = self.id
+		result['bookmarkId'] = str(self.bookmarkId)
+		result['id'] = str(self.id)
 		result['description'] = self.description
 		return result
 

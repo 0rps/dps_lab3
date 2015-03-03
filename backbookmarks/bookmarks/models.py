@@ -11,5 +11,5 @@ def getBookmarkViaId(id):
 	return objs[0] if objs.count() > 0 else None
 
 def getBookmarkViaURL(url):
-	objs = Bookmark.objects.filter(url__iexact=exact(url))
+	objs = Bookmark.objects.filter(url__exact=exact(url))
 	return objs[0] if objs.count() > 0 else None
